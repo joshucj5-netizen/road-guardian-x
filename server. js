@@ -1,0 +1,48 @@
+
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+let latest = {
+  depth_cm: 0,
+  distance_cm: 0,
+  status: "WAITING"
+};
+
+app.get("/", (req, res) => {
+  res.send("ROAD GUARDIAN X Backend Online");
+});
+
+app.post("/api/depth", (req, res) => {
+  const depth = Number(req.body.depth_cm);
+  const distance = Number(req.body.distance_cm);
+
+  if (!Number.isFinite(depth) ||
+      !Number.isFinite(distance)) {
+    return res.status(400).json({
+      error: "Invalid sensor data"
+    });
+  }
+
+  latest = {
+    depth_cm: depth,
+    distance_cm: distance,
+    status: depth > 2.5 ? "HAZARDOUS" : "SAFE"
+  };
+
+  res.json({ success: true, data: latest });
+});
+
+app.get("/api/depth", (req, res) => {
+  res.json(latest);
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("Backend running on port " + PORT);
+});
